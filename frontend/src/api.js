@@ -4,7 +4,7 @@ import axios from 'axios';
 // the base URL and auth header logic ONCE, instead of repeating it in
 // every component that needs to talk to the backend.
 const api = axios.create({
-  baseURL: 'http://localhost:8001/api',
+  baseURL: 'https://expense-tracker-mr5k.onrender.com/api',
 });
 
 // Axios "interceptor": runs before every single request. If we have a
