@@ -27,19 +27,31 @@ export default function Dashboard() {
   }, [expenses]);
 
   async function loadExpenses() {
-    const params = typeFilter ? { type: typeFilter } : {};
-    const { data } = await api.get("/expenses", { params });
-    setExpenses(data);
+    try {
+      const params = typeFilter ? { type: typeFilter } : {};
+      const { data } = await api.get("/expenses", { params });
+      setExpenses(data);
+    } catch (err) {
+      console.error("Failed to load expenses", err);
+    }
   }
 
   async function loadSummary() {
-    const { data } = await api.get("/expenses/analytics/summary");
-    setSummary(data);
+    try {
+      const { data } = await api.get("/expenses/analytics/summary");
+      setSummary(data);
+    } catch (err) {
+      console.error("Failed to load summary", err);
+    }
   }
 
   async function loadBudgets() {
-    const { data } = await api.get("/budgets");
-    setBudgets(data);
+    try {
+      const { data } = await api.get("/budgets");
+      setBudgets(data);
+    } catch (err) {
+      console.error("Failed to load budgets", err);
+    }
   }
 
   async function handleAdd(expenseData) {
@@ -95,23 +107,66 @@ export default function Dashboard() {
 
   const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
 
+  const firstName = user?.name?.split(" ")[0] || "there";
+  const initial = (user?.name || "?").trim().charAt(0).toUpperCase();
+
   return (
+    <>
+      <nav className="navbar">
+        <div className="navbar-inner">
+          <div className="brand">
+            <span className="brand-mark">₹</span>
+            <span className="brand-name">
+              Expense<em>Flow</em>
+            </span>
+          </div>
+
+          <div className="nav-actions">
+            <button
+              className="nav-btn income"
+              onClick={() => setActiveForm("income")}
+            >
+              <span className="nav-btn-dot" /> Income
+            </button>
+            <button
+              className="nav-btn expense"
+              onClick={() => setActiveForm("expense")}
+            >
+              <span className="nav-btn-dot" /> Expense
+            </button>
+
+            <span className="nav-divider" />
+
+            <div className="user-chip" title={user?.email}>
+              <span className="avatar">{initial}</span>
+              <span className="user-chip-name">{firstName}</span>
+            </div>
+
+            <button className="icon-btn" onClick={logout} title="Log out">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </nav>
+
     <div className="dashboard">
       <header className="dashboard-header">
         <div>
-          <h1>Hello, {user?.name}</h1>
+          <h1>Hello, {firstName}</h1>
           <p className="subtitle">Your personal money command room.</p>
-        </div>
-        <div className="header-actions">
-          <button className="income" onClick={() => setActiveForm("income")}>
-            + Add Income
-          </button>
-          <button className="expense" onClick={() => setActiveForm("expense")}>
-            − Add Expense
-          </button>
-          <button className="ghost" onClick={logout}>
-            Log out
-          </button>
         </div>
       </header>
 
@@ -151,8 +206,16 @@ export default function Dashboard() {
       </div>
 
       <div className="two-col">
-        <section className="card">
-          <h2>Income vs Expense</h2>
+        <section className="card chart-card">
+          <div className="chart-header">
+            <div className="chart-title-area">
+              <div>
+                <h3>Income vs Expense</h3>
+                <p className="chart-subtitle">This month's cash flow at a glance</p>
+              </div>
+            </div>
+            <button className="chart-arrow-btn">↗</button>
+          </div>
           <IncomeExpenseChart
             income={summary?.currentMonth?.income || 0}
             expense={summary?.currentMonth?.expense || 0}
@@ -209,5 +272,6 @@ export default function Dashboard() {
         />
       </section>
     </div>
+    </>
   );
 }

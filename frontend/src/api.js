@@ -10,11 +10,33 @@ const api = axios.create({
 // Axios "interceptor": runs before every single request. If we have a
 // JWT saved from login, attach it as a Bearer token automatically.
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  // "Remember me" decides which storage holds the session (see AuthContext).
+  const token =
+    localStorage.getItem('token') || sessionStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// If the token is expired/invalid the backend answers 401. Clear the stale
+// session and send the user back to the login page instead of leaving them
+// on a dashboard where every request silently fails. Auth endpoints are
+// excluded so a wrong password still shows its error inline.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const isAuthCall = error.config?.url?.includes('/auth/');
+    if (status === 401 && !isAuthCall) {
+      for (const storage of [localStorage, sessionStorage]) {
+        storage.removeItem('token');
+        storage.removeItem('user');
+      }
+      window.location.replace('/login');
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;
