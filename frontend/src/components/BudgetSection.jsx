@@ -43,11 +43,19 @@ export default function BudgetSection({
 
       {showForm && (
         <form className="expense-form" onSubmit={handleSubmit}>
-          <input
-            placeholder="Category (leave blank for overall budget)"
+          <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-          />
+          >
+            <option value="">Overall Budget</option>
+            <option value="Food">Food</option>
+            <option value="Travel">Travel</option>
+            <option value="Rent">Rent</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Bills">Bills</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Other">Other</option>
+          </select>
           <input
             type="number"
             placeholder="Cap amount"

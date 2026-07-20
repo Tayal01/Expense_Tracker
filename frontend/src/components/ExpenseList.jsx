@@ -36,70 +36,72 @@ export default function ExpenseList({
       {expenses.length === 0 ? (
         <p className="empty-state">No transactions yet.</p>
       ) : (
-        <table className="ledger-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Category</th>
-              <th>Note</th>
-              <th>Amount</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {expenses.map((exp) =>
-              editingId === exp._id ? (
-                <tr key={exp._id}>
-                  <td colSpan={6}>
-                    <ExpenseForm
-                      initialData={exp}
-                      onCancel={() => setEditingId(null)}
-                      onSubmit={(updated) => {
-                        onUpdate(exp._id, updated);
-                        setEditingId(null);
-                      }}
-                    />
-                  </td>
-                </tr>
-              ) : (
-                <tr key={exp._id}>
-                  <td>{new Date(exp.date).toLocaleDateString()}</td>
-                  <td>
-                    <span className={`type-badge ${exp.type}`}>
-                      {exp.type === "income" ? "↗ Income" : "↘ Expense"}
-                    </span>
-                  </td>
-                  <td>{exp.category}</td>
-                  <td className="note-cell">{exp.title}</td>
-                  <td
-                    className={
-                      exp.type === "income" ? "amount income" : "amount expense"
-                    }
-                  >
-                    {exp.type === "income" ? "+" : "−"}₹{exp.amount.toFixed(2)}
-                  </td>
-                  <td>
-                    <div className="expense-actions">
-                      <button
-                        className="ghost"
-                        onClick={() => setEditingId(exp._id)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="ghost danger"
-                        onClick={() => setPendingDelete(exp)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ),
-            )}
-          </tbody>
-        </table>
+        <div className="table-container">
+          <table className="ledger-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Note</th>
+                <th>Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses.map((exp) =>
+                editingId === exp._id ? (
+                  <tr key={exp._id}>
+                    <td colSpan={6}>
+                      <ExpenseForm
+                        initialData={exp}
+                        onCancel={() => setEditingId(null)}
+                        onSubmit={(updated) => {
+                          onUpdate(exp._id, updated);
+                          setEditingId(null);
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={exp._id}>
+                    <td>{new Date(exp.date).toLocaleDateString()}</td>
+                    <td>
+                      <span className={`type-badge ${exp.type}`}>
+                        {exp.type === "income" ? "↗ Income" : "↘ Expense"}
+                      </span>
+                    </td>
+                    <td>{exp.category}</td>
+                    <td className="note-cell">{exp.title}</td>
+                    <td
+                      className={
+                        exp.type === "income" ? "amount income" : "amount expense"
+                      }
+                    >
+                      {exp.type === "income" ? "+" : "−"}₹{exp.amount.toFixed(2)}
+                    </td>
+                    <td>
+                      <div className="expense-actions">
+                        <button
+                          className="ghost"
+                          onClick={() => setEditingId(exp._id)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="ghost danger"
+                          onClick={() => setPendingDelete(exp)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ),
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <ConfirmDialog

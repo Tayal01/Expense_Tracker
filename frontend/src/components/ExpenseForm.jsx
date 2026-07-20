@@ -26,6 +26,7 @@ export default function ExpenseForm({
   const [type, setType] = useState(initialData?.type || defaultType);
   const [amount, setAmount] = useState(initialData?.amount || "");
   const [category, setCategory] = useState(initialData?.category || "Other");
+  const [title, setTitle] = useState(initialData?.title || "");
   const [date, setDate] = useState(
     initialData?.date
       ? initialData.date.slice(0, 10)
@@ -36,13 +37,12 @@ export default function ExpenseForm({
 
   function handleSubmit(e) {
     e.preventDefault();
-    // We still send a `title` to the backend (it's a required field in the
-    // Expense schema), but we just reuse the category as the title since
-    // there's no separate description input anymore.
-    onSubmit({ title: category, amount: Number(amount), category, date, type });
+    // We send the custom note/description as `title`. If empty, fallback to the category.
+    onSubmit({ title: title.trim() || category, amount: Number(amount), category, date, type });
     if (!initialData) {
       setAmount("");
       setCategory("Other");
+      setTitle("");
     }
   }
 
@@ -92,6 +92,12 @@ export default function ExpenseForm({
           </option>
         ))}
       </select>
+      <input
+        type="text"
+        placeholder="Note / Description"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
       <input
         type="date"
         value={date}

@@ -6,6 +6,7 @@ import ExpenseList from "../components/ExpenseList.jsx";
 import ExpenseChart from "../components/ExpenseChart.jsx";
 import IncomeExpenseChart from "../components/IncomeExpenseChart.jsx";
 import BudgetSection from "../components/BudgetSection.jsx";
+import TrendChart from "../components/TrendChart.jsx";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -14,6 +15,7 @@ export default function Dashboard() {
   const [budgets, setBudgets] = useState([]);
   const [typeFilter, setTypeFilter] = useState(""); // '', 'income', 'expense'
   const [activeForm, setActiveForm] = useState(null); // null | 'income' | 'expense'
+  const [timeframe, setTimeframe] = useState("month"); // 'month' | 'all'
 
   useEffect(() => {
     loadExpenses();
@@ -65,6 +67,31 @@ export default function Dashboard() {
     await api.delete(`/budgets/${id}`);
     loadBudgets();
   }
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  const expenseItems = expenses.filter((e) => e.type === "expense");
+  const filteredItems = timeframe === "month"
+    ? expenseItems.filter((e) => {
+        const d = new Date(e.date);
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      })
+    : expenseItems;
+
+  const groupedCategory = {};
+  filteredItems.forEach((e) => {
+    const cat = e.category || "Other";
+    if (!groupedCategory[cat]) {
+      groupedCategory[cat] = { _id: cat, total: 0 };
+    }
+    groupedCategory[cat].total += e.amount;
+  });
+  
+  const categoryBreakdown = Object.values(groupedCategory).sort(
+    (a, b) => b.total - a.total
+  );
 
   const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
 
@@ -131,11 +158,40 @@ export default function Dashboard() {
             expense={summary?.currentMonth?.expense || 0}
           />
         </section>
-        <section className="card">
-          <h2>Expense breakdown by category</h2>
-          <ExpenseChart data={summary?.byCategory} />
+        <section className="card chart-card">
+          <div className="chart-header">
+            <div className="chart-title-area">
+              <div>
+                <h3>Expense breakdown</h3>
+                <p className="chart-subtitle">Monitor how your money is being spent</p>
+              </div>
+            </div>
+            <button className="chart-arrow-btn">↗</button>
+          </div>
+          
+          <div className="chart-tabs">
+            <button 
+              className={timeframe === "month" ? "tab-btn active" : "tab-btn"}
+              onClick={() => setTimeframe("month")}
+            >
+              Month
+            </button>
+            <button 
+              className={timeframe === "all" ? "tab-btn active" : "tab-btn"}
+              onClick={() => setTimeframe("all")}
+            >
+              All Time
+            </button>
+          </div>
+          
+          <ExpenseChart data={categoryBreakdown} />
         </section>
       </div>
+
+      <section className="card">
+        <h2>Monthly Cash Flow Trend</h2>
+        <TrendChart data={summary?.byMonth} />
+      </section>
 
       <BudgetSection
         budgets={budgets}
