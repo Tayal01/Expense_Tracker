@@ -27,12 +27,16 @@ router.get('/', async (req, res) => {
     // can show "₹3,200 / ₹5,000 spent" style progress in the UI.
     const enriched = await Promise.all(
       budgets.map(async (budget) => {
+        const cat = budget.category ? budget.category.trim() : '';
+        const isOverall = !cat || cat.toLowerCase() === 'overall' || cat.toLowerCase() === 'monthly budget';
+        const normalizedCategory = isOverall ? null : budget.category;
+
         const matchStage = {
           user: userId,
           type: 'expense',
           date: { $gte: startOfMonth, $lt: startOfNextMonth },
         };
-        if (budget.category) matchStage.category = budget.category;
+        if (normalizedCategory) matchStage.category = normalizedCategory;
 
         const result = await Expense.aggregate([
           { $match: matchStage },
@@ -41,6 +45,7 @@ router.get('/', async (req, res) => {
 
         return {
           ...budget.toObject(),
+          category: normalizedCategory,
           spent: result[0]?.total || 0,
         };
       })
@@ -64,8 +69,12 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'month, year and amount are required' });
     }
 
+    const cat = category ? category.trim() : null;
+    const isOverall = !cat || cat.toLowerCase() === 'overall' || cat.toLowerCase() === 'monthly budget';
+    const normalizedCategory = isOverall ? null : cat;
+
     const budget = await Budget.findOneAndUpdate(
-      { user: req.userId, month, year, category: category || null },
+      { user: req.userId, month, year, category: normalizedCategory },
       { amount },
       { new: true, upsert: true, runValidators: true }
     );
